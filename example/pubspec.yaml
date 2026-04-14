@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  dio: ^5.8.0+1
 
   proxy_getter:
     # When depending on this package from a real application you should use:
