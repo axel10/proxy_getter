@@ -41,6 +41,11 @@ flutter:
   # Please refer to README.md for a detailed explanation.
   plugin:
     platforms:
+      android:
+        package: com.flutter_rust_bridge.proxy_getter
+        pluginClass: ProxyGetterPlugin
+      ios:
+        pluginClass: ProxyGetterPlugin
       linux:
         ffiPlugin: true
       macos:

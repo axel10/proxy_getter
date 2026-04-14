@@ -5,9 +5,9 @@
 Pod::Spec.new do |s|
   s.name             = 'proxy_getter'
   s.version          = '0.0.1'
-  s.summary          = 'A new Flutter FFI plugin project.'
+  s.summary          = 'Get system proxy settings on all supported platforms.'
   s.description      = <<-DESC
-A new Flutter FFI plugin project.
+Get system proxy settings on all supported platforms.
                        DESC
   s.homepage         = 'http://example.com'
   s.license          = { :file => '../LICENSE' }
@@ -21,25 +21,9 @@ A new Flutter FFI plugin project.
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
   s.platform = :ios, '11.0'
+  s.frameworks = 'CFNetwork'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
   s.swift_version = '5.0'
-
-  s.script_phase = {
-    :name => 'Build Rust library',
-    # First argument is relative path to the `rust` folder, second is name of rust library
-    :script => 'sh "$PODS_TARGET_SRCROOT/../cargokit/build_pod.sh" ../rust proxy_getter',
-    :execution_position => :before_compile,
-    :input_files => ['${BUILT_PRODUCTS_DIR}/cargokit_phony'],
-    # Let XCode know that the static library referenced in -force_load below is
-    # created by this build step.
-    :output_files => ["${BUILT_PRODUCTS_DIR}/libproxy_getter.a"],
-  }
-  s.pod_target_xcconfig = {
-    'DEFINES_MODULE' => 'YES',
-    # Flutter.framework does not contain a i386 slice.
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
-    'OTHER_LDFLAGS' => '-force_load ${BUILT_PRODUCTS_DIR}/libproxy_getter.a',
-  }
 end

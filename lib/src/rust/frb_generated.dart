@@ -79,6 +79,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 abstract class RustLibApi extends BaseApi {
   String crateApiSimpleGreet({required String name});
 
+  String crateApiSimpleGetSystemProxyJson();
+
   Future<void> crateApiSimpleInitApp();
 }
 
@@ -112,6 +114,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiSimpleGreetConstMeta =>
       const TaskConstMeta(debugName: "greet", argNames: ["name"]);
+
+  @override
+  String crateApiSimpleGetSystemProxyJson() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiSimpleGetSystemProxyJsonConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiSimpleGetSystemProxyJsonConstMeta =>
+      const TaskConstMeta(debugName: "get_system_proxy_json", argNames: []);
 
   @override
   Future<void> crateApiSimpleInitApp() {

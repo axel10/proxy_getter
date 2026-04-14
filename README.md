@@ -1,12 +1,20 @@
 # proxy_getter
 
-A new Flutter FFI plugin project.
+Get the system proxy on desktop and mobile.
 
 ## Getting Started
 
-This project is a starting point for a Flutter
-[FFI plugin](https://flutter.dev/to/ffi-package),
-a specialized package that includes native code directly invoked with Dart FFI.
+This project is a Flutter plugin that combines:
+
+* Rust + `flutter_rust_bridge` on Windows, Linux, and macOS.
+* Native platform code on Android and iOS.
+
+The public API is `getSystemProxy()`, which returns:
+
+* `enable`
+* `host`
+* `port`
+* `bypass`
 
 ## Project structure
 
