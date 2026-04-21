@@ -1,3 +1,7 @@
+## 1.1.1
+
+* Add license.
+
 ## 1.1.0
 
 * Clear sample code.
