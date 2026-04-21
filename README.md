@@ -167,9 +167,20 @@ This is a good reference if you want to see the plugin working in a real Flutter
 
 - Android
 - iOS
-- Linux
-- macOS
 - Windows
+- macOS
+- Linux
+
+## Requirements
+
+The Rust environment requirement depends on your target platform:
+
+| Platform | Rust Required | Reason |
+| :--- | :---: | :--- |
+| **Windows / macOS / Linux** | **Yes** | Uses Rust FFI, compiled during build. |
+| **Android / iOS** | **No** | Uses native platform channels. |
+
+If you are building for desktop, ensure you have the [Rust toolchain](https://rustup.rs/) installed.
 
 ## Notes
 
