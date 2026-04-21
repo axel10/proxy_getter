@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter/material.dart';
 import 'package:proxy_getter/proxy_getter.dart';
 
@@ -53,7 +54,23 @@ class _ProxyTestPageState extends State<ProxyTestPage> {
   void initState() {
     super.initState();
     _currentProxy = widget.proxy;
+    _updateDioProxy(_currentProxy);
     _loadImageByDio();
+  }
+
+  void _updateDioProxy(SystemProxy proxy) {
+    _dio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: () {
+        final client = HttpClient();
+        client.findProxy = (uri) {
+          if (!proxy.enable || proxy.host.isEmpty || proxy.port <= 0) {
+            return 'DIRECT';
+          }
+          return 'PROXY ${proxy.host}:${proxy.port}';
+        };
+        return client;
+      },
+    );
   }
 
   Future<void> _handleRefresh() async {
@@ -65,6 +82,7 @@ class _ProxyTestPageState extends State<ProxyTestPage> {
       // 1. Refresh proxy status
       final newProxy = await getSystemProxy();
       HttpOverrides.global = _SystemProxyHttpOverrides(newProxy);
+      _updateDioProxy(newProxy);
       
       // 2. Clear image cache to force reload
       PaintingBinding.instance.imageCache.clear();

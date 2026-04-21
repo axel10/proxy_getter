@@ -106,19 +106,34 @@ Future<void> main() async {
 
 ## Example: Use With Dio
 
-If your app uses Dio, you can reuse the same `HttpOverrides` setup:
+You can configure Dio to use the system proxy specifically without affecting the global `HttpOverrides`:
 
 ```dart
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
+import 'package:proxy_getter/proxy_getter.dart';
 
-final dio = Dio();
-final response = await dio.get(
-  'https://example.com/api',
-  options: Options(responseType: ResponseType.bytes),
-);
+Future<void> main() async {
+  final proxy = await getSystemProxy();
+  final dio = Dio();
+
+  dio.httpClientAdapter = IOHttpClientAdapter(
+    createHttpClient: () {
+      final client = HttpClient();
+      client.findProxy = (uri) {
+        if (!proxy.enable || proxy.host.isEmpty || proxy.port <= 0) {
+          return 'DIRECT';
+        }
+        return 'PROXY ${proxy.host}:${proxy.port}';
+      };
+      return client;
+    },
+  );
+
+  final response = await dio.get('https://example.com');
+}
 ```
-
-After `HttpOverrides.global` is configured, Dio will use the underlying `dart:io` client and inherit the proxy rules.
 
 ## Example: Use in `Image.network`
 
