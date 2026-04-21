@@ -1,100 +1,167 @@
 # proxy_getter
 
-Get the system proxy on desktop and mobile.
+`proxy_getter` is a Flutter plugin for reading the current system proxy configuration and exposing it to Dart as a simple `SystemProxy` model.
 
-## Getting Started
+It is designed for apps that need to:
 
-This project is a Flutter plugin that combines:
+- respect the user's OS-level proxy settings
+- route `dart:io` traffic through the system proxy
+- inspect proxy state before making network requests
 
-* Rust + `flutter_rust_bridge` on Windows, Linux, and macOS.
-* Native platform code on Android and iOS.
+The plugin uses:
 
-The public API is `getSystemProxy()`, which returns:
+- native platform channels on Android and iOS
+- Rust FFI on desktop platforms
 
-* `enable`
-* `host`
-* `port`
-* `bypass`
+## Features
 
-## Project structure
+- Read system proxy settings from Flutter
+- Return a strongly typed `SystemProxy` object
+- Serialize and deserialize proxy data as JSON
+- Works with `HttpOverrides`, Dio, and any `dart:io` HTTP client
 
-This template uses the following structure:
+## API
 
-* `src`: Contains the native source code, and a CmakeFile.txt file for building
-  that source code into a dynamic library.
+### `getSystemProxy()`
 
-* `lib`: Contains the Dart code that defines the API of the plugin, and which
-  calls into the native code using `dart:ffi`.
+Returns a `Future<SystemProxy>` with these fields:
 
-* platform folders (`android`, `ios`, `windows`, etc.): Contains the build files
-  for building and bundling the native code library with the platform application.
+- `enable`
+- `host`
+- `port`
+- `bypass`
 
-## Building and bundling native code
+### `SystemProxy`
 
-The `pubspec.yaml` specifies FFI plugins as follows:
-
-```yaml
-  plugin:
-    platforms:
-      some_platform:
-        ffiPlugin: true
+```dart
+class SystemProxy {
+  const SystemProxy({
+    required this.enable,
+    required this.host,
+    required this.port,
+    required this.bypass,
+  });
+}
 ```
 
-This configuration invokes the native build for the various target platforms
-and bundles the binaries in Flutter applications using these FFI plugins.
+You can also convert it with:
 
-This can be combined with dartPluginClass, such as when FFI is used for the
-implementation of one platform in a federated plugin:
+- `toMap()`
+- `toJson()`
+- `SystemProxy.fromMap(...)`
+- `SystemProxy.fromJson(...)`
 
-```yaml
-  plugin:
-    implements: some_other_plugin
-    platforms:
-      some_platform:
-        dartPluginClass: SomeClass
-        ffiPlugin: true
+
+## Basic Usage
+
+```dart
+import 'package:proxy_getter/proxy_getter.dart';
+
+Future<void> main() async {
+  final proxy = await getSystemProxy();
+
+  print(proxy.enable);
+  print(proxy.host);
+  print(proxy.port);
+  print(proxy.bypass);
+}
 ```
 
-A plugin can have both FFI and method channels:
+## Example: Use With `HttpOverrides`
 
-```yaml
-  plugin:
-    platforms:
-      some_platform:
-        pluginClass: SomeName
-        ffiPlugin: true
+This is the most common scenario when you want all `dart:io` network requests to respect the system proxy.
+
+```dart
+import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:proxy_getter/proxy_getter.dart';
+
+class SystemProxyHttpOverrides extends HttpOverrides {
+  SystemProxyHttpOverrides(this.proxy);
+
+  final SystemProxy proxy;
+
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    final client = super.createHttpClient(context);
+    client.findProxy = (uri) {
+      if (!proxy.enable || proxy.host.isEmpty || proxy.port <= 0) {
+        return 'DIRECT';
+      }
+      return 'PROXY ${proxy.host}:${proxy.port}';
+    };
+    return client;
+  }
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final proxy = await getSystemProxy();
+  HttpOverrides.global = SystemProxyHttpOverrides(proxy);
+
+  runApp(const MyApp());
+}
 ```
 
-The native build systems that are invoked by FFI (and method channel) plugins are:
+## Example: Use With Dio
 
-* For Android: Gradle, which invokes the Android NDK for native builds.
-  * See the documentation in android/build.gradle.
-* For iOS and MacOS: Xcode, via CocoaPods.
-  * See the documentation in ios/proxy_getter.podspec.
-  * See the documentation in macos/proxy_getter.podspec.
-* For Linux and Windows: CMake.
-  * See the documentation in linux/CMakeLists.txt.
-  * See the documentation in windows/CMakeLists.txt.
+If your app uses Dio, you can reuse the same `HttpOverrides` setup:
 
-## Binding to native code
+```dart
+import 'package:dio/dio.dart';
 
-To use the native code, bindings in Dart are needed.
-To avoid writing these by hand, they are generated from the header file
-(`src/proxy_getter.h`) by `package:ffigen`.
-Regenerate the bindings by running `dart run ffigen --config ffigen.yaml`.
+final dio = Dio();
+final response = await dio.get(
+  'https://example.com/api',
+  options: Options(responseType: ResponseType.bytes),
+);
+```
 
-## Invoking native code
+After `HttpOverrides.global` is configured, Dio will use the underlying `dart:io` client and inherit the proxy rules.
 
-Very short-running native functions can be directly invoked from any isolate.
-For example, see `sum` in `lib/proxy_getter.dart`.
+## Example: Use in `Image.network`
 
-Longer-running functions should be invoked on a helper isolate to avoid
-dropping frames in Flutter applications.
-For example, see `sumAsync` in `lib/proxy_getter.dart`.
+You can also apply the proxy globally before loading network images:
 
-## Flutter help
+```dart
+final proxy = await getSystemProxy();
+HttpOverrides.global = SystemProxyHttpOverrides(proxy);
+```
 
-For help getting started with Flutter, view our
-[online documentation](https://docs.flutter.dev), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Then `Image.network(...)` requests made through the app will follow the same proxy configuration.
 
+## Example App
+
+The [`example/`](example/) app demonstrates a full end-to-end flow:
+
+1. Read the system proxy
+2. Apply it to `HttpOverrides.global`
+3. Load a remote image
+4. Test the same proxy behavior with Dio
+
+This is a good reference if you want to see the plugin working in a real Flutter app.
+
+## Project Structure
+
+- [`lib/proxy_getter.dart`](lib/proxy_getter.dart) - public exports
+- [`lib/src/proxy_getter.dart`](lib/src/proxy_getter.dart) - `SystemProxy` model and `getSystemProxy()`
+- [`example/lib/main.dart`](example/lib/main.dart) - full usage demo
+
+## Supported Platforms
+
+- Android
+- iOS
+- Linux
+- macOS
+- Windows
+
+## Notes
+
+- On mobile platforms, proxy data is read through the native channel.
+- On desktop platforms, proxy data is read through the Rust implementation.
+- If no proxy is available, the returned object will usually have `enable = false`, empty `host`, and `port = 0`.
+
+## License
+
+See the [LICENSE](LICENSE) file for details.
