@@ -43,14 +43,49 @@ class ProxyTestPage extends StatefulWidget {
 
 class _ProxyTestPageState extends State<ProxyTestPage> {
   final Dio _dio = Dio();
+  late SystemProxy _currentProxy;
   String _dioStatus = 'Idle';
   String _dioDetails = '';
   bool _loading = false;
+  int _imageVersion = 0;
 
   @override
   void initState() {
     super.initState();
+    _currentProxy = widget.proxy;
     _loadImageByDio();
+  }
+
+  Future<void> _handleRefresh() async {
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      // 1. Refresh proxy status
+      final newProxy = await getSystemProxy();
+      HttpOverrides.global = _SystemProxyHttpOverrides(newProxy);
+      
+      // 2. Clear image cache to force reload
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+
+      setState(() {
+        _currentProxy = newProxy;
+        _imageVersion++;
+      });
+
+      // 3. Reload Dio request
+      await _loadImageByDio();
+    } catch (e) {
+      debugPrint('Refresh failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadImageByDio() async {
@@ -90,15 +125,15 @@ class _ProxyTestPageState extends State<ProxyTestPage> {
 
   @override
   Widget build(BuildContext context) {
-    final proxy = widget.proxy;
+    final proxy = _currentProxy;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Proxy Getter Test'),
         actions: [
           IconButton(
-            onPressed: _loading ? null : _loadImageByDio,
+            onPressed: _loading ? null : _handleRefresh,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Reload with Dio',
+            tooltip: 'Refresh All',
           ),
         ],
       ),
@@ -130,6 +165,7 @@ class _ProxyTestPageState extends State<ProxyTestPage> {
               borderRadius: BorderRadius.circular(16),
               child: Image.network(
                 kCoverUrl,
+                key: ValueKey('image_$_imageVersion'),
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
