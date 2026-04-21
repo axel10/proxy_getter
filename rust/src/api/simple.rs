@@ -2,10 +2,10 @@ use serde_json::json;
 #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 use sysproxy::Sysproxy;
 
-#[flutter_rust_bridge::frb(sync)] // Synchronous mode for simplicity of the demo
-pub fn greet(name: String) -> String {
-    format!("Hello, {name}!")
-}
+// #[flutter_rust_bridge::frb(sync)] // Synchronous mode for simplicity of the demo
+// pub fn greet(name: String) -> String {
+//     format!("Hello, {name}!")
+// }
 
 #[flutter_rust_bridge::frb(sync)]
 pub fn get_system_proxy_json() -> String {
