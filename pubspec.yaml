@@ -1,6 +1,6 @@
 name: proxy_getter
 description: "A Flutter FFI plugin project for reading system proxy settings."
-version: 1.1.1
+version: 1.2.0
 homepage: https://github.com/axel10/proxy_getter
 
 environment:
