@@ -13,6 +13,14 @@ The plugin uses:
 - native platform channels on Android and iOS
 - Rust FFI on desktop platforms
 
+## Platform Notes
+
+The proxy keys exposed by Apple's CFNetwork framework are not the same across all Apple platforms.
+
+- On iOS, this plugin reads the system HTTP proxy settings.
+- On macOS, the native implementation can read a broader set of proxy values, including HTTPS, SOCKS, and bypass lists.
+- If a platform does not expose a proxy configuration, `getSystemProxy()` returns an "empty" `SystemProxy` with `enable = false`.
+
 ## Features
 
 - Read system proxy settings from Flutter
@@ -184,7 +192,8 @@ If you are building for desktop, ensure you have the [Rust toolchain](https://ru
 
 ## Notes
 
-- On mobile platforms, proxy data is read through the native channel.
+- On Android, proxy data is read through the native channel.
+- On iOS, proxy data is read through the native channel, but only the HTTP proxy fields are guaranteed to be available.
 - On desktop platforms, proxy data is read through the Rust implementation.
 - If no proxy is available, the returned object will usually have `enable = false`, empty `host`, and `port = 0`.
 

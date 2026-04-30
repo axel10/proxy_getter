@@ -3,6 +3,21 @@ import Foundation
 import CFNetwork
 
 public class ProxyGetterPlugin: NSObject, FlutterPlugin {
+  private enum ProxyKeys {
+    static let httpEnable = "HTTPEnable"
+    static let httpProxy = "HTTPProxy"
+    static let httpPort = "HTTPPort"
+
+    // These keys are macOS-only in Apple's CFNetwork headers.
+    static let httpsEnable = "HTTPSEnable"
+    static let httpsProxy = "HTTPSProxy"
+    static let httpsPort = "HTTPSPort"
+    static let socksEnable = "SOCKSEnable"
+    static let socksProxy = "SOCKSProxy"
+    static let socksPort = "SOCKSPort"
+    static let exceptionsList = "ExceptionsList"
+  }
+
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(
       name: "proxy_getter/system_proxy",
@@ -27,9 +42,7 @@ public class ProxyGetterPlugin: NSObject, FlutterPlugin {
     }
 
     let candidates: [(enabledKey: String, hostKey: String, portKey: String)] = [
-      (kCFNetworkProxiesHTTPEnable as String, kCFNetworkProxiesHTTPProxy as String, kCFNetworkProxiesHTTPPort as String),
-      (kCFNetworkProxiesHTTPSEnable as String, kCFNetworkProxiesHTTPSProxy as String, kCFNetworkProxiesHTTPSPort as String),
-      (kCFNetworkProxiesSOCKSEnable as String, kCFNetworkProxiesSOCKSProxy as String, kCFNetworkProxiesSOCKSPort as String),
+      (ProxyKeys.httpEnable, ProxyKeys.httpProxy, ProxyKeys.httpPort),
     ]
 
     for candidate in candidates {
@@ -41,7 +54,7 @@ public class ProxyGetterPlugin: NSObject, FlutterPlugin {
             "enable": true,
             "host": host,
             "port": port,
-            "bypass": (settings[kCFNetworkProxiesExceptionsList as String] as? [String] ?? []).joined(separator: ","),
+            "bypass": (settings[ProxyKeys.exceptionsList] as? [String] ?? []).joined(separator: ","),
           ]
         }
       }

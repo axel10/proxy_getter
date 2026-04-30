@@ -2,6 +2,8 @@
 
 Demonstrates how to use the proxy_getter plugin.
 
+On macOS, the example app needs the `com.apple.security.network.client` entitlement to talk to the system proxy, including a local proxy such as `127.0.0.1:7890`.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
