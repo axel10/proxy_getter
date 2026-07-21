@@ -4,8 +4,9 @@ set(PLUGIN_NAME "proxy_getter")
 
 project(${PLUGIN_NAME} LANGUAGES CXX)
 
-# This value is set by the flutter tool when building.
-include("flutter/generated_config.cmake")
+# Explicitly opt in to modern CMake behaviors to avoid warnings with recent
+# versions of CMake.
+cmake_policy(VERSION 3.14...3.25)
 
 # Define the library target.
 add_library(${PLUGIN_NAME} SHARED
