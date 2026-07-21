@@ -1,20 +1,33 @@
-# The Flutter tooling requires that developers have a version of Visual Studio
-# installed that includes CMake 3.14 or later. You should not increase this
-# version, as doing so will cause the plugin to fail to compile for some
-# customers of the plugin.
 cmake_minimum_required(VERSION 3.14)
 
-# Project-level configuration.
-set(PROJECT_NAME "proxy_getter")
-project(${PROJECT_NAME} LANGUAGES CXX)
+set(PLUGIN_NAME "proxy_getter")
 
-include("../cargokit/cmake/cargokit.cmake")
-apply_cargokit(${PROJECT_NAME} ../rust proxy_getter "")
+project(${PLUGIN_NAME} LANGUAGES CXX)
 
-# List of absolute paths to libraries that should be bundled with the plugin.
-# This list could contain prebuilt libraries, or libraries created by an
-# external build triggered from this build file.
-set(proxy_getter_bundled_libraries
-  "${${PROJECT_NAME}_cargokit_lib}"
-  PARENT_SCOPE
+# This value is set by the flutter tool when building.
+include("flutter/generated_config.cmake")
+
+# Define the library target.
+add_library(${PLUGIN_NAME} SHARED
+  "proxy_getter_plugin.cpp"
+  "proxy_getter_plugin.h"
+)
+
+# Apply standard build settings.
+target_compile_features(${PLUGIN_NAME} PUBLIC cxx_std_17)
+set_target_properties(${PLUGIN_NAME} PROPERTIES
+  CXX_VISIBILITY_PRESET hidden)
+
+target_compile_definitions(${PLUGIN_NAME} PRIVATE "FLUTTER_PLUGIN_IMPL")
+
+target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
+
+# Add the directory containing the header file to the search path.
+target_include_directories(${PLUGIN_NAME} PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
+# Copy the plugin DLL to the output directory.
+set_target_properties(${PLUGIN_NAME} PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/outputs/plugins/${PLUGIN_NAME}"
 )

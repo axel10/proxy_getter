@@ -4,8 +4,8 @@ import 'package:proxy_getter/proxy_getter.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  setUpAll(() async => await RustLib.init());
-  test('Can call rust function', () async {
-    // expect(greet(name: "Tom"), "Hello, Tom!");
+  test('Can get system proxy', () async {
+    final proxy = await getSystemProxy();
+    expect(proxy, isNotNull);
   });
 }
