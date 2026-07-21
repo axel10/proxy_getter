@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-set(PLUGIN_NAME "proxy_getter")
+set(PLUGIN_NAME "proxy_getter_plugin")
 
 project(${PLUGIN_NAME} LANGUAGES CXX)
 
