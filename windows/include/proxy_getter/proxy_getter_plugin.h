@@ -6,6 +6,23 @@
 
 #include <memory>
 
+#if defined(FLUTTER_PLUGIN_IMPL)
+#define FLUTTER_PLUGIN_EXPORT __declspec(dllexport)
+#else
+#define FLUTTER_PLUGIN_EXPORT __declspec(dllimport)
+#endif
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+FLUTTER_PLUGIN_EXPORT void ProxyGetterPluginRegisterWithRegistrar(
+    FlutterDesktopPluginRegistrarRef registrar);
+
+#if defined(__cplusplus)
+}
+#endif
+
 namespace proxy_getter {
 
 class ProxyGetterPlugin : public flutter::Plugin {

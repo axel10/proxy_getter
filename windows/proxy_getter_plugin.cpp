@@ -1,4 +1,4 @@
-#include "proxy_getter_plugin.h"
+#include "include/proxy_getter/proxy_getter_plugin.h"
 
 // This must be included before many other Windows headers.
 #include <windows.h>
@@ -10,6 +10,13 @@
 #include <memory>
 #include <string>
 #include <map>
+
+void ProxyGetterPluginRegisterWithRegistrar(
+    FlutterDesktopPluginRegistrarRef registrar) {
+  proxy_getter::ProxyGetterPlugin::RegisterWithRegistrar(
+      flutter::PluginRegistrarManager::GetInstance()
+          ->GetRegistrar<flutter::PluginRegistrarWindows>(registrar));
+}
 
 namespace proxy_getter {
 
